@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Decentralized Reputation System</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+</head>
+<body style="font-family: Arial; text-align: center; margin-top: 50px;">
+
+  <h2>🔗 Decentralized Reputation System</h2>
+
+  <button onclick="connectWallet()">🔐 Connect Wallet</button>
+  <p id="wallet"></p>
+
+  <br/>
+
+  <input type="text" id="address" placeholder="Enter Wallet Address" />
+  <button onclick="getReputation()">📊 Get Reputation</button>
+  <p id="repScore"></p>
+
+  <br/>
+
+  <input type="text" id="userAddress" placeholder="User Address" />
+  <input type="number" id="points" placeholder="Points" />
+  <input type="text" id="actionType" placeholder="Action Type" />
+  <button onclick="updateReputation()">➕ Update Reputation</button>
+
+  <script>
+    let provider, signer, contract;
+    const contractAddress = "0x61712d619AE7D1F5d29EeAc9f9B60811E1B4236c";
+    const contractABI = [
+      // Minimal ABI for interacting with functions
+      "function getReputation(address user) view returns (uint256)",
+      "function updateReputation(address user, uint256 points, string memory actionType)",
+    ];
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const userAddress = await signer.getAddress();
+        document.getElementById("wallet").innerText = `Connected: ${userAddress}`;
+      } else {
+        alert("Please install MetaMask");
+      }
+    }
+
+    async function getReputation() {
+      const address = document.getElementById("address").value;
+      const score = await contract.getReputation(address);
+      document.getElementById("repScore").innerText = `Reputation Score: ${score}`;
+    }
+
+    async function updateReputation() {
+      const user = document.getElementById("userAddress").value;
+      const points = document.getElementById("points").value;
+      const action = document.getElementById("actionType").value;
+
+      const tx = await contract.updateReputation(user, points, action);
+      await tx.wait();
+      alert("Reputation updated successfully!");
+    }
+  </script>
+
+</body>
+</html>
